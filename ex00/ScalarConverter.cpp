@@ -1,9 +1,12 @@
 
 #include "ScalarConverter.hpp"
-#include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <cctype>
+#include <iostream> // std::cout 
+#include <cstdlib> // std::atoi, std::atof
+#include <cctype> // std::isdigit, std::isprint
+#include <iomanip> // std::setprecision
+#include <limits> // std::numeric_limits
+#include <cmath> // std::isnan, std::isinf
+#include <climits> // INT_MIN MAX
 
 using std::cout;
 
@@ -17,11 +20,9 @@ bool ScalarConverter::isPseudoLiteral(const std::string& input)
 
 	if (i == 6)
 	{
-		cout << "Input is not pseudo litteral\n";
 		return false;
 	}
 
-	cout << "Input is pseudo litteral\n";
 	return true;
 }
 
@@ -88,17 +89,11 @@ bool ScalarConverter::isChar(const std::string& input)
 	if (input.length() != 1)
 		return false;
 
-	if (!std::isprint(static_cast<unsigned char>(input[0])))
-	{
-		return false;
-	}
-
 	if (std::isdigit(static_cast<unsigned char>(input[0])))
 	{
 		return false;
 	}
 	return true;
-
 }
 
 bool ScalarConverter::isFloat(const std::string& input)
@@ -202,6 +197,112 @@ bool ScalarConverter::isInt(const std::string& input)
 	return true;
 }
 
+void ScalarConverter::displayChar(double input)
+{
+
+	if (std::isnan(input) || std::isinf(input))
+	{
+		cout << "char: impossible\n";
+		return;
+	}
+	else if (input < 0.0 || input > 127.0)
+	{
+		cout << "char: Non displayable\n";
+		return;
+	}
+	else if (!std::isprint(static_cast<unsigned char>(input)))
+	{
+		cout << "char: Non displayable\n";
+		return;
+	}
+	
+	cout << "char: '" << static_cast<char>(input) << "'\n";
+
+}
+
+void ScalarConverter::displayInt(double input)
+{
+	if (std::isnan(input) || std::isinf(input))
+	{
+		cout << "int: impossible\n";
+		return;
+	}
+
+	if (input < static_cast<double>(std::numeric_limits<int>::min())
+		|| input > static_cast<double>(std::numeric_limits<int>::max()))
+	{
+		cout << "int: impossible\n";
+		return;
+	}
+	
+	int i = static_cast<int>(input);
+
+	cout << "int: " << i << "\n";
+}
+
+void ScalarConverter::displayFloat(double input)
+{
+	float f = static_cast<float>(input);
+
+	if (std::isnan(f))
+	{
+		cout << "float: nanf\n";
+	}
+	else if (std::isinf(f))
+	{
+		if (f < 0.0f)
+			cout << "float: -inff\n";
+		else
+			cout << "float: +inff\n";
+	}
+	else
+	{
+		std::ios::fmtflags old_flags = std::cout.flags();
+		std::streamsize old_precision = std::cout.precision();
+		
+		cout << std::fixed << std::setprecision(1);
+		cout << "float: " << f << "f\n";
+
+		std::cout.flags(old_flags);
+		std::cout.precision(old_precision);
+	}
+}
+
+void ScalarConverter::displayDouble(double input)
+{
+	if (std::isnan(input))
+	{
+		cout << "double: nan\n";
+	}
+	else if (std::isinf(input))
+	{
+		if (input < 0.0)
+			cout << "double: -inf\n";
+		else
+			cout << "double: +inf\n";
+	}
+	else
+	{
+		std::ios::fmtflags old_flags = std::cout.flags();
+		std::streamsize old_precision = std::cout.precision();
+
+		cout << std::fixed << std::setprecision(1);
+		cout << "double: " << input << "\n";
+
+		std::cout.flags(old_flags);
+		std::cout.precision(old_precision);
+	}
+}
+
+void ScalarConverter::displayAll(double input)
+{
+	displayChar(input);
+	displayInt(input);
+	displayFloat(input);
+	displayDouble(input);
+}
+
+
 void ScalarConverter::convert(const std::string& input)
 {
 
@@ -230,22 +331,33 @@ void ScalarConverter::convert(const std::string& input)
 	{
 		case CHAR:
 		{
-			cout << "Input is of type CHAR\n";
+			char value = input[0];
+			displayAll(static_cast<double>(value));
 			break;
 		}
 		case FLOAT:
 		{
-			cout << "Input is of type FLOAT\n";
+			float f = std::strtof(input.c_str(), NULL);
+			double value = static_cast<double>(f);
+			displayAll(value);
 			break;
 		}
 		case DOUBLE:
 		{
-			cout << "Input is of type DOUBLE\n";
+			double value = std::strtod(input.c_str(), NULL);
+			displayAll(value);
 			break;
 		}
 		case INT:
 		{
-			cout << "Input is of type INT\n";
+			int i;
+			if (!parseIntStrict(input, i))
+			{
+				double value = std::strtod(input.c_str(), NULL);
+				displayAll(value);
+				break;
+			}
+			displayAll(static_cast<double>(i));
 			break;
 		}
 		case UNKNOWN:
@@ -260,10 +372,26 @@ void ScalarConverter::convert(const std::string& input)
 	return ;
 }
 
-// int a = 0;
+bool ScalarConverter::parseIntStrict(const std::string& input, int& out)
+{
+	char* end = NULL;
+	long v;
 
-	// std::stringstream s(input);
+	if (input.empty())
+		return false;
 
-	// s >> a;
+	errno = 0;
+	v = std::strtol(input.c_str(), &end, 10);
 
-	// std::cout << a << '\n';
+	if (end == input.c_str() || *end != '\0')
+		return false;
+
+	if (errno == ERANGE)
+		return false;
+
+	if (v < INT_MIN || v > INT_MAX)
+		return false;
+
+	out = static_cast<int>(v);
+	return true;
+}

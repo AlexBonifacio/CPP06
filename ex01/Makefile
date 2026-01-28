@@ -1,14 +1,14 @@
 
 CXX = c++
-CXXFLAGS = -Werror -Wall -Wextra -std=c++98 -Wno-conversion -Iinc -MMD -MP
+CXXFLAGS = -Werror -Wall -Wextra -std=c++98 -MMD -MP -Wno-conversion
 
 OBJ_DIR = obj
 
-SRCS = main.cpp ScalarConverter.cpp
-OBJS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+SRCS = main.cpp Serializer.cpp
+OBJS = $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 DEP = $(OBJS:.o=.d)
 
-NAME = ex00.out
+NAME = ex01.out
 
 all : $(NAME)
 
@@ -25,7 +25,7 @@ clean :
 	rm -rf $(OBJ_DIR)
 
 fclean : clean
-	rm -rf $(NAME)
+	rm -f $(NAME)
 
 re : fclean all
 

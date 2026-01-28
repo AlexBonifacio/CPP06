@@ -22,6 +22,14 @@ class ScalarConverter
 		static bool isDouble(const std::string& input);
 		static bool hasExactlyOneDot(const std::string& input);
 
+		static void displayAll(double input);
+		static void displayChar(double input);
+		static void displayInt(double input);
+		static void displayFloat(double input);
+		static void displayDouble(double input);
+
+		static bool parseIntStrict(const std::string& s, int& out);
+
 		enum Type
 		{
 			CHAR,
